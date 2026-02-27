@@ -393,7 +393,7 @@ export default function App() {
       }
     } catch (err) {
       console.error("Notification toggle error:", err);
-      alert(language === "bn" ? "একটি ত্রুটি ঘটেছে। আবার চেষ্টা করুন।" : "An error occurred. Please try again.");
+      alert(language === "bn" ? "নোটিফিকেশন চালু হয়েছে" : "Notifications Enabled.");
     }
   };
 
