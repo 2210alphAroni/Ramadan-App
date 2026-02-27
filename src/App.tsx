@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import {
-  Moon,
-  Sun,
-  Compass,
-  Bell,
-  BellOff,
-  Clock,
-  MapPin,
-  RotateCcw,
+import { 
+  Moon, 
+  Sun, 
+  Compass, 
+  Bell, 
+  BellOff, 
+  Clock, 
+  MapPin, 
+  RotateCcw, 
   Fingerprint,
   ChevronRight,
   CalendarDays,
@@ -53,7 +53,7 @@ const getBengaliDate = (date: Date): string => {
   const day = date.getDate();
   const month = date.getMonth();
   const year = date.getFullYear();
-
+  
   // Very rough approximation for demo purposes
   return `${toBengaliNumber(day, "bn")} ফাল্গুন, ১৪৩২`;
 };
@@ -98,13 +98,13 @@ export default function App() {
   const t = translations[language];
 
   const calculateZakat = () => {
-    const total =
-      (parseFloat(zakatInputs.cash) || 0) +
-      (parseFloat(zakatInputs.gold) || 0) +
-      (parseFloat(zakatInputs.silver) || 0) +
-      (parseFloat(zakatInputs.business) || 0) -
+    const total = 
+      (parseFloat(zakatInputs.cash) || 0) + 
+      (parseFloat(zakatInputs.gold) || 0) + 
+      (parseFloat(zakatInputs.silver) || 0) + 
+      (parseFloat(zakatInputs.business) || 0) - 
       (parseFloat(zakatInputs.debts) || 0);
-
+    
     setZakatResult(Math.max(0, total * 0.025));
   };
 
@@ -129,7 +129,7 @@ export default function App() {
     if (cachedDaily) setPrayerData(JSON.parse(cachedDaily));
     if (cachedMonthly) setMonthlyData(JSON.parse(cachedMonthly));
     if (cachedDistrict) setSelectedDistrict(JSON.parse(cachedDistrict));
-
+    
     const savedNotifications = localStorage.getItem("notificationsEnabled");
     if (savedNotifications === "true" && Notification.permission === "granted") {
       setNotificationsEnabled(true);
@@ -229,7 +229,7 @@ export default function App() {
               // The API is 1 day ahead of the user's requirement for Bangladesh
               const apiHijriDay = parseInt(day.date.hijri.day);
               let adjustedDay = apiHijriDay - 1;
-
+              
               // Handle month boundary if necessary (simplified for Ramadan)
               if (adjustedDay < 1) adjustedDay = 29; // Assuming previous month had 29 or 30 days
 
@@ -249,25 +249,25 @@ export default function App() {
           });
           setMonthlyData(updatedMonthly);
           localStorage.setItem("monthlyData", JSON.stringify(updatedMonthly));
-
+          
           // Also update the current prayerData if it's today
           const today = new Date();
           const todayStr = today.getDate().toString().padStart(2, '0');
           const todayMonth = (today.getMonth() + 1);
           const todayYear = today.getFullYear().toString();
-
-          const todayData = updatedMonthly.find((d: any) =>
-            d.date.gregorian.day === todayStr &&
+          
+          const todayData = updatedMonthly.find((d: any) => 
+            d.date.gregorian.day === todayStr && 
             d.date.gregorian.month.number === todayMonth &&
             d.date.gregorian.year === todayYear
           );
-
+          
           if (todayData) {
             setPrayerData(todayData);
             localStorage.setItem("prayerData", JSON.stringify(todayData));
           }
         }
-
+        
         setError(null);
       } catch (err) {
         // If fetch fails, we already have cached data from useEffect on mount
@@ -288,7 +288,7 @@ export default function App() {
 
     const now = new Date();
     const timings = prayerData.timings;
-
+    
     let next: NextPrayer | null = null;
     let minDiff = Infinity;
 
@@ -306,7 +306,7 @@ export default function App() {
 
       if (diff < minDiff) {
         minDiff = diff;
-
+        
         const h = Math.floor(diff / (1000 * 60 * 60));
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const s = Math.floor((diff % (1000 * 60)) / 1000);
@@ -332,7 +332,7 @@ export default function App() {
       showNotification(next.name);
       setLastNotifiedPrayer(next.name);
     }
-
+    
     // Reset lastNotifiedPrayer when we are far from the next prayer
     if (minDiff > 65000) {
       setLastNotifiedPrayer(null);
@@ -351,7 +351,7 @@ export default function App() {
         body: t.ramadan_blessing,
         icon: "/favicon.ico"
       });
-      audioRef.current?.play().catch(() => { });
+      audioRef.current?.play().catch(() => {});
     }
   };
 
@@ -367,9 +367,9 @@ export default function App() {
         alert(language === "bn" ? "আপনার ব্রাউজার নোটিফিকেশন সাপোর্ট করে না।" : "This browser does not support desktop notification");
         return;
       }
-
+      
       const currentPermission = Notification.permission;
-
+      
       if (currentPermission === "denied") {
         alert(language === "bn" ? "নোটিফিকেশন পারমিশন ব্লক করা আছে। দয়া করে ব্রাউজার সেটিংস থেকে এটি এলাও করুন।" : "Notification permission has been denied. Please enable it in your browser settings.");
         return;
@@ -397,10 +397,6 @@ export default function App() {
     }
   };
 
-  const testNotification = () => {
-    showNotification("ON");
-  };
-
   const handleTasbih = () => {
     setTasbihCount(prev => prev + 1);
     if ("vibrate" in navigator) navigator.vibrate(50);
@@ -418,8 +414,8 @@ export default function App() {
     setIsDistrictModalOpen(false);
   };
 
-  const filteredDistricts = BANGLADESH_DISTRICTS.filter(d =>
-    d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  const filteredDistricts = BANGLADESH_DISTRICTS.filter(d => 
+    d.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     d.bn.includes(searchQuery)
   );
 
@@ -447,10 +443,10 @@ export default function App() {
             <p className="text-[10px] text-gold-500 uppercase tracking-widest font-bold truncate">{t.app_subtitle}</p>
           </div>
         </div>
-
+        
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {isOffline && (
-            <motion.div
+            <motion.div 
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500/10 text-red-500 border border-red-500/20"
@@ -591,7 +587,7 @@ export default function App() {
               <h2 className="text-2xl font-bold text-gold-500">{t.calendar_title}</h2>
               <CalendarDays className="w-6 h-6 text-gold-500/50" />
             </div>
-
+            
             <div className="glass rounded-3xl overflow-hidden border-gold-500/10">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
@@ -606,7 +602,7 @@ export default function App() {
                     {monthlyData.map((day, idx) => {
                       const dateObj = new Date(day.date.gregorian.year, day.date.gregorian.month.number - 1, day.date.gregorian.day);
                       const isToday = new Date().toDateString() === dateObj.toDateString();
-
+                      
                       return (
                         <tr key={idx} className={`border-b border-white/5 transition-colors hover:bg-white/5 ${isToday ? 'bg-gold-500/10' : ''}`}>
                           <td className="p-4">
@@ -635,7 +631,7 @@ export default function App() {
                 </table>
               </div>
             </div>
-
+            
             <div className="px-2">
               <div className="glass p-4 rounded-2xl border-gold-500/10 bg-gold-500/5">
                 <p className="text-[11px] text-gold-500/70 italic leading-relaxed">
@@ -652,14 +648,14 @@ export default function App() {
               <h2 className="text-3xl font-bold text-gold-500 mb-2">Qibla Compass</h2>
               <p className="text-sm opacity-60">Align your device to find the Kaaba</p>
             </div>
-
+            
             <div className="relative w-64 h-64">
               {/* Compass Ring */}
               <div className="absolute inset-0 rounded-full border-4 border-white/10" />
               <div className="absolute inset-0 rounded-full border-t-4 border-gold-500 animate-pulse" />
-
+              
               {/* Compass Needle */}
-              <motion.div
+              <motion.div 
                 animate={{ rotate: qiblaAngle - deviceHeading }}
                 className="absolute inset-0 flex items-center justify-center"
               >
@@ -670,7 +666,7 @@ export default function App() {
                   </div>
                 </div>
               </motion.div>
-
+              
               {/* Center Point */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-4 h-4 bg-gold-500 rounded-full ring-4 ring-emerald-950" />
@@ -721,7 +717,7 @@ export default function App() {
               </div>
               <h2 className="text-2xl font-bold text-gold-500">{t.zakat_calculator}</h2>
             </div>
-
+            
             <div className="space-y-4">
               {[
                 { key: "cash", label: t.cash },
@@ -732,17 +728,17 @@ export default function App() {
               ].map((item) => (
                 <div key={item.key} className="space-y-1">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-gold-500 ml-1">{item.label}</label>
-                  <input
-                    type="number"
-                    value={zakatInputs[item.key as keyof typeof zakatInputs]}
-                    onChange={(e) => setZakatInputs({ ...zakatInputs, [item.key]: e.target.value })}
+                  <input 
+                    type="number" 
+                    value={zakatInputs[item.key as keyof typeof zakatInputs]} 
+                    onChange={(e) => setZakatInputs({...zakatInputs, [item.key]: e.target.value})}
                     placeholder="0.00"
                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 outline-none focus:border-gold-500/50 transition-colors"
                   />
                 </div>
               ))}
-
-              <button
+              
+              <button 
                 onClick={calculateZakat}
                 className="w-full py-4 rounded-xl bg-gold-500 text-emerald-950 font-bold text-lg shadow-lg shadow-gold-500/20 hover:bg-gold-400 transition-colors mt-4"
               >
@@ -750,7 +746,7 @@ export default function App() {
               </button>
 
               {zakatResult !== null && (
-                <motion.div
+                <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="glass bg-gold-500/10 p-6 rounded-2xl border border-gold-500/30 text-center space-y-2"
@@ -852,25 +848,20 @@ export default function App() {
                       <span className="font-medium">{t.notifications}</span>
                       {notificationsEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
                     </button>
-                    {notificationsEnabled && (
-                      <button onClick={testNotification} className="w-full py-2 rounded-xl border border-white/10 bg-white/5 text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all cursor-pointer relative z-10">
-                        Test Notification
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>
               <div className="mt-auto">
                 <div className="glass p-4 rounded-2xl border-gold-500/20">
                   <p className="text-[10px] text-gold-500 font-bold uppercase tracking-widest mb-1">Ramadan 2026</p>
-                  <p className="text-xs opacity-60">{t.ramadan_blessing}</p>
-                  <p className="text-xs text-center font-semibold uppercase tracking-wider mb-2">
+                  <p className="text-xs opacity-60 mb-3">{t.ramadan_blessing}</p>
+                  <p className="text-[10px] text-center font-semibold uppercase tracking-wider">
                     Developed by{" "}
                     <a
                       href="https://roniportfolio.onrender.com"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-500 hover:text-blue-700 underline transition duration-300"
+                      className="text-gold-500 hover:text-gold-400 underline transition-colors"
                     >
                       Nabinur Islam Roni
                     </a>
