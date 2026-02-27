@@ -864,6 +864,7 @@ export default function App() {
                 <div className="glass p-4 rounded-2xl border-gold-500/20">
                   <p className="text-[10px] text-gold-500 font-bold uppercase tracking-widest mb-1">Ramadan 2026</p>
                   <p className="text-xs opacity-60">{t.ramadan_blessing}</p>
+                  <p className="text-center font-bold uppercase tracking-widest mb-1"> DevelopBY: <a href="https://roniportfolio.onrender.com">Nabinur Islam Roni</a></p>
                 </div>
               </div>
             </motion.div>
