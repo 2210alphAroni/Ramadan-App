@@ -398,7 +398,7 @@ export default function App() {
   };
 
   const testNotification = () => {
-    showNotification("Test Notification");
+    showNotification("ON");
   };
 
   const handleTasbih = () => {
