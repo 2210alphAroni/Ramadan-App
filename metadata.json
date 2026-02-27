@@ -1,0 +1,5 @@
+{
+  "name": "Ramadan Premium Tracker",
+  "description": "A high-end, premium Ramadan tracking application with real-time prayer times, countdowns, and a digital tasbih counter.",
+  "requestFramePermissions": ["geolocation", "notifications"]
+}
