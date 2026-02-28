@@ -105,7 +105,7 @@ export const translations = {
     maghrib: "মাগরিব",
     isha: "এশা",
     iftar: "ইফতার",
-    sehri: "সেহরি",
+    sehri: "হোম",
     at: "সময়",
     calendar_title: "রমজান ক্যালেন্ডার",
     zakat_calculator: "যাকাত ক্যালকুলেটর",
