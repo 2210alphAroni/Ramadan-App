@@ -19,8 +19,6 @@ import {
   Navigation2,
   WifiOff,
   Wallet,
-  Volume2,
-  VolumeX,
   BookOpen,
   PlayCircle,
   PauseCircle,
@@ -112,15 +110,14 @@ export default function App() {
     debts: ""
   });
   const [zakatResult, setZakatResult] = useState<number | null>(null);
-  const [playingAdhan, setPlayingAdhan] = useState<string | null>(null);
   const [activeJuz, setActiveJuz] = useState<number | null>(null);
   const [juzData, setJuzData] = useState<JuzData | null>(null);
   const [isJuzLoading, setIsJuzLoading] = useState(false);
   const [playingJuzAudio, setPlayingJuzAudio] = useState<number | null>(null);
   const [currentAyahIndex, setCurrentAyahIndex] = useState(0);
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const quranAudioRef = useRef<HTMLAudioElement | null>(null);
+  const notificationAudioRef = useRef<HTMLAudioElement | null>(null);
   const t = translations[language];
 
   // Auto-scroll to active Ayah
@@ -174,7 +171,7 @@ export default function App() {
 
   // Initialize audio for notification
   useEffect(() => {
-    audioRef.current = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
+    notificationAudioRef.current = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
   }, []);
 
   // Theme management
@@ -387,7 +384,7 @@ export default function App() {
         body: t.ramadan_blessing,
         icon: "/favicon.ico"
       });
-      audioRef.current?.play().catch(() => {});
+      notificationAudioRef.current?.play().catch(() => {});
     }
   };
 
@@ -442,46 +439,6 @@ export default function App() {
     setTasbihCount(0);
   };
 
-  const toggleAdhan = (prayerName: string) => {
-    if (playingAdhan === prayerName) {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-      setPlayingAdhan(null);
-    } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      if (quranAudioRef.current) {
-        quranAudioRef.current.pause();
-        setPlayingJuzAudio(null);
-      }
-      
-      // Using reliable Adhan URLs from a stable source
-      // Fajr Adhan is usually different (includes "As-salatu khayrum minan-nawm")
-      const adhanUrl = prayerName === "Fajr" 
-        ? "https://www.islamcan.com/audio/adhan/azan2.mp3" 
-        : "https://www.islamcan.com/audio/adhan/azan1.mp3";
-      
-      const audio = new Audio();
-      // Removing crossOrigin as it can cause "no supported source" errors if the server doesn't send CORS headers
-      audio.src = adhanUrl;
-      
-      audio.play().catch(err => {
-        console.error("Audio playback failed:", err);
-        setPlayingAdhan(null);
-      });
-      audioRef.current = audio;
-      setPlayingAdhan(prayerName);
-      
-      audio.onended = () => {
-        setPlayingAdhan(null);
-        audioRef.current = null;
-      };
-    }
-  };
-
   const selectDistrict = (district: District) => {
     setSelectedDistrict(district);
     localStorage.setItem("selectedDistrict", JSON.stringify(district));
@@ -525,11 +482,6 @@ export default function App() {
       }
       setPlayingJuzAudio(null);
     } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        setPlayingAdhan(null);
-      }
-      
       if (juzData && juzData.number === juzNumber) {
         playAyah(0);
       } else {
@@ -758,16 +710,6 @@ export default function App() {
                         <p className="text-lg font-bold">{formatTime(prayerData?.timings[name] || "", language)}</p>
                       </div>
                     </div>
-                    
-                    {name !== "Sunrise" && (
-                      <button 
-                        onClick={() => toggleAdhan(name)}
-                        className={`p-2 rounded-full transition-all ${playingAdhan === name ? 'bg-gold-500 text-emerald-950 shadow-lg shadow-gold-500/20' : 'bg-white/5 hover:bg-white/10 text-gold-500'}`}
-                        title={playingAdhan === name ? t.stop_adhan : t.listen_adhan}
-                      >
-                        {playingAdhan === name ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                      </button>
-                    )}
                   </motion.div>
                 ))}
               </div>
