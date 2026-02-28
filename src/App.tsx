@@ -458,13 +458,16 @@ export default function App() {
         setPlayingJuzAudio(null);
       }
       
-      // Using reliable Adhan URLs
+      // Using reliable Adhan URLs from a stable source
       // Fajr Adhan is usually different (includes "As-salatu khayrum minan-nawm")
       const adhanUrl = prayerName === "Fajr" 
         ? "https://www.islamcan.com/audio/adhan/azan2.mp3" 
         : "https://www.islamcan.com/audio/adhan/azan1.mp3";
       
-      const audio = new Audio(adhanUrl);
+      const audio = new Audio();
+      // Removing crossOrigin as it can cause "no supported source" errors if the server doesn't send CORS headers
+      audio.src = adhanUrl;
+      
       audio.play().catch(err => {
         console.error("Audio playback failed:", err);
         setPlayingAdhan(null);
