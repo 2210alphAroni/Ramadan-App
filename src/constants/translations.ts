@@ -50,7 +50,21 @@ export const translations = {
     offline: "Offline",
     ramadan_note: "Note: Depending on moon sighting, dates may vary by 1 day in some regions.",
     date: "Date",
-    day: "Day"
+    day: "Day",
+    prayer_rules_title: "Prayer Rules & Rakats",
+    rakat: "Rakat",
+    sunnat: "Sunnat",
+    farz: "Farz",
+    nafl: "Nafl",
+    witr: "Witr",
+    fajr_rakat: "2 Sunnat + 2 Farz",
+    dhuhr_rakat: "4 Sunnat + 4 Farz + 2 Sunnat + 2 Nafl",
+    asr_rakat: "4 Sunnat + 4 Farz",
+    maghrib_rakat: "3 Farz + 2 Sunnat + 2 Nafl",
+    isha_rakat: "4 Sunnat + 4 Farz + 2 Sunnat + 2 Nafl + 3 Witr + 2 Nafl",
+    prayer_note: "Note: Sunnat Ghair Muakkadah is optional but recommended. Nafl is voluntary.",
+    listen_adhan: "Listen Adhan",
+    stop_adhan: "Stop Adhan"
   },
   bn: {
     app_title: "রমজান",
@@ -103,7 +117,21 @@ export const translations = {
     offline: "অফলাইন",
     ramadan_note: "দ্রষ্টব্য: চাঁদ দেখার ওপর ভিত্তি করে বিভিন্ন স্থানে এই হিসাব ১ দিন কম-বেশি হতে পারে।",
     date: "তারিখ",
-    day: "দিন"
+    day: "দিন",
+    prayer_rules_title: "৫ ওয়াক্ত নামাজের রাকাতসমূহ",
+    rakat: "রাকাত",
+    sunnat: "সুন্নত",
+    farz: "ফরজ",
+    nafl: "নফল",
+    witr: "বিতর",
+    fajr_rakat: "২ সুন্নত + ২ ফরজ",
+    dhuhr_rakat: "৪ সুন্নত + ৪ ফরজ + ২ সুন্নত + ২ নফল",
+    asr_rakat: "৪ সুন্নত + ৪ ফরজ",
+    maghrib_rakat: "৩ ফরজ + ২ সুন্নত + ২ নফল",
+    isha_rakat: "৪ সুন্নত + ৪ ফরজ + ২ সুন্নত + ২ নফল + ৩ বিতর + ২ নফল",
+    prayer_note: "দ্রষ্টব্য: সুন্নত গায়রে মুয়াক্কাদা ঐচ্ছিক কিন্তু সওয়াবের কাজ। নফল নামাজ নফল ইবাদত হিসেবে গণ্য।",
+    listen_adhan: "আযান শুনুন",
+    stop_adhan: "আযান বন্ধ করুন"
   }
 };
 

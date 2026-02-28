@@ -18,7 +18,9 @@ import {
   Check,
   Navigation2,
   WifiOff,
-  Wallet
+  Wallet,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { PrayerData, PrayerName, NextPrayer } from "./types";
@@ -93,6 +95,7 @@ export default function App() {
     debts: ""
   });
   const [zakatResult, setZakatResult] = useState<number | null>(null);
+  const [playingAdhan, setPlayingAdhan] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const t = translations[language];
@@ -393,7 +396,7 @@ export default function App() {
       }
     } catch (err) {
       console.error("Notification toggle error:", err);
-      alert(language === "bn" ? "নোটিফিকেশন চালু হয়েছে" : "Notifications Enabled.");
+      alert(language === "bn" ? "নোটিফিকেশন চালু হয়েছে" : "Notifications Enabled");
     }
   };
 
@@ -404,6 +407,39 @@ export default function App() {
 
   const resetTasbih = () => {
     setTasbihCount(0);
+  };
+
+  const toggleAdhan = (prayerName: string) => {
+    if (playingAdhan === prayerName) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setPlayingAdhan(null);
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      
+      // Using reliable Adhan URLs
+      // Fajr Adhan is usually different (includes "As-salatu khayrum minan-nawm")
+      const adhanUrl = prayerName === "Fajr" 
+        ? "https://www.islamcan.com/audio/adhan/azan2.mp3" 
+        : "https://www.islamcan.com/audio/adhan/azan1.mp3";
+      
+      const audio = new Audio(adhanUrl);
+      audio.play().catch(err => {
+        console.error("Audio playback failed:", err);
+        setPlayingAdhan(null);
+      });
+      audioRef.current = audio;
+      setPlayingAdhan(prayerName);
+      
+      audio.onended = () => {
+        setPlayingAdhan(null);
+        audioRef.current = null;
+      };
+    }
   };
 
   const selectDistrict = (district: District) => {
@@ -562,20 +598,78 @@ export default function App() {
               <div className="grid grid-cols-2 gap-3">
                 {PRAYER_ORDER.map((name) => (
                   <motion.div key={name} whileHover={{ y: -2 }} className={`glass p-4 rounded-2xl flex items-center justify-between transition-all ${nextPrayer?.name === (t[name.toLowerCase() as keyof typeof t] || name) ? 'border-gold-500/50 bg-gold-500/5 ring-1 ring-gold-500/20' : ''}`}>
-                    <div>
-                      <p className="text-[10px] text-gold-500 font-bold uppercase tracking-widest">{t[name.toLowerCase() as keyof typeof t] || name}</p>
-                      <p className="text-lg font-bold">{formatTime(prayerData?.timings[name] || "", language)}</p>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${nextPrayer?.name === (t[name.toLowerCase() as keyof typeof t] || name) ? 'bg-gold-500 text-emerald-950' : 'bg-white/5 opacity-50'}`}>
+                        {name === "Fajr" && <Moon className="w-5 h-5" />}
+                        {name === "Sunrise" && <Sun className="w-5 h-5" />}
+                        {name === "Dhuhr" && <Sun className="w-5 h-5" />}
+                        {name === "Asr" && <Sun className="w-5 h-5" />}
+                        {name === "Maghrib" && <Moon className="w-5 h-5" />}
+                        {name === "Isha" && <Moon className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gold-500 font-bold uppercase tracking-widest">{t[name.toLowerCase() as keyof typeof t] || name}</p>
+                        <p className="text-lg font-bold">{formatTime(prayerData?.timings[name] || "", language)}</p>
+                      </div>
                     </div>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${nextPrayer?.name === (t[name.toLowerCase() as keyof typeof t] || name) ? 'bg-gold-500 text-emerald-950' : 'bg-white/5 opacity-50'}`}>
-                      {name === "Fajr" && <Moon className="w-4 h-4" />}
-                      {name === "Sunrise" && <Sun className="w-4 h-4" />}
-                      {name === "Dhuhr" && <Sun className="w-4 h-4" />}
-                      {name === "Asr" && <Sun className="w-4 h-4" />}
-                      {name === "Maghrib" && <Moon className="w-4 h-4" />}
-                      {name === "Isha" && <Moon className="w-4 h-4" />}
+                    
+                    {name !== "Sunrise" && (
+                      <button 
+                        onClick={() => toggleAdhan(name)}
+                        className={`p-2 rounded-full transition-all ${playingAdhan === name ? 'bg-gold-500 text-emerald-950 shadow-lg shadow-gold-500/20' : 'bg-white/5 hover:bg-white/10 text-gold-500'}`}
+                        title={playingAdhan === name ? t.stop_adhan : t.listen_adhan}
+                      >
+                        {playingAdhan === name ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                      </button>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            </section>
+
+            {/* Prayer Rules & Rakats */}
+            <section className="space-y-4">
+              <div className="flex items-center justify-between px-2">
+                <h4 className="text-xs font-bold uppercase tracking-widest text-gold-500">{t.prayer_rules_title}</h4>
+                <div className="w-4 h-4 rounded-full border border-gold-500/30 flex items-center justify-center">
+                  <span className="text-[8px] text-gold-500 font-bold">i</span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { name: "fajr", rakat: t.fajr_rakat },
+                  { name: "dhuhr", rakat: t.dhuhr_rakat },
+                  { name: "asr", rakat: t.asr_rakat },
+                  { name: "maghrib", rakat: t.maghrib_rakat },
+                  { name: "isha", rakat: t.isha_rakat }
+                ].map((prayer) => (
+                  <motion.div
+                    key={prayer.name}
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    className="glass p-4 rounded-2xl flex items-center gap-4 border-gold-500/5"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-gold-500/10 flex items-center justify-center flex-shrink-0 border border-gold-500/20">
+                      <span className="text-gold-500 font-bold text-xs">
+                        {prayer.name === "fajr" && "F"}
+                        {prayer.name === "dhuhr" && "D"}
+                        {prayer.name === "asr" && "A"}
+                        {prayer.name === "maghrib" && "M"}
+                        {prayer.name === "isha" && "I"}
+                      </span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[10px] text-gold-500 font-bold uppercase tracking-widest mb-0.5">{t[prayer.name as keyof typeof t]}</p>
+                      <p className="text-sm font-medium leading-snug">{prayer.rakat}</p>
                     </div>
                   </motion.div>
                 ))}
+              </div>
+              <div className="px-2">
+                <p className="text-[10px] text-gold-500/60 italic leading-relaxed text-center">
+                  {t.prayer_note}
+                </p>
               </div>
             </section>
           </>
