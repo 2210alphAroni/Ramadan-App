@@ -20,7 +20,12 @@ import {
   WifiOff,
   Wallet,
   Volume2,
-  VolumeX
+  VolumeX,
+  BookOpen,
+  PlayCircle,
+  PauseCircle,
+  Music,
+  ChevronLeft
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { PrayerData, PrayerName, NextPrayer } from "./types";
@@ -29,7 +34,19 @@ import { translations, Language } from "./constants/translations";
 
 const PRAYER_ORDER: PrayerName[] = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
-type Tab = "prayer" | "calendar" | "qibla" | "tasbih" | "zakat";
+type Tab = "prayer" | "calendar" | "qibla" | "tasbih" | "zakat" | "quran";
+
+interface Ayah {
+  number: number;
+  text: string;
+  bnText?: string;
+  audio: string;
+}
+
+interface JuzData {
+  number: number;
+  ayahs: Ayah[];
+}
 
 const toBengaliNumber = (num: string | number, lang: Language): string => {
   if (lang !== "bn") return String(num);
@@ -96,8 +113,14 @@ export default function App() {
   });
   const [zakatResult, setZakatResult] = useState<number | null>(null);
   const [playingAdhan, setPlayingAdhan] = useState<string | null>(null);
+  const [activeJuz, setActiveJuz] = useState<number | null>(null);
+  const [juzData, setJuzData] = useState<JuzData | null>(null);
+  const [isJuzLoading, setIsJuzLoading] = useState(false);
+  const [playingJuzAudio, setPlayingJuzAudio] = useState<number | null>(null);
+  const [currentAyahIndex, setCurrentAyahIndex] = useState(0);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const quranAudioRef = useRef<HTMLAudioElement | null>(null);
   const t = translations[language];
 
   const calculateZakat = () => {
@@ -396,7 +419,7 @@ export default function App() {
       }
     } catch (err) {
       console.error("Notification toggle error:", err);
-      alert(language === "bn" ? "নোটিফিকেশন চালু হয়েছে" : "Notifications Enabled");
+      alert(language === "bn" ? "একটি ত্রুটি ঘটেছে। আবার চেষ্টা করুন।" : "An error occurred. Please try again.");
     }
   };
 
@@ -419,6 +442,10 @@ export default function App() {
     } else {
       if (audioRef.current) {
         audioRef.current.pause();
+      }
+      if (quranAudioRef.current) {
+        quranAudioRef.current.pause();
+        setPlayingJuzAudio(null);
       }
       
       // Using reliable Adhan URLs
@@ -448,6 +475,112 @@ export default function App() {
     setLocation({ lat: district.lat, lon: district.lon });
     calculateQibla(district.lat, district.lon);
     setIsDistrictModalOpen(false);
+  };
+
+  const fetchJuzData = async (juzNumber: number) => {
+    setIsJuzLoading(true);
+    setActiveJuz(juzNumber);
+    try {
+      // Fetch Arabic text and audio
+      const arRes = await fetch(`https://api.alquran.cloud/v1/juz/${juzNumber}/ar.alafasy`);
+      const arData = await arRes.json();
+      
+      // Fetch Bengali translation
+      const bnRes = await fetch(`https://api.alquran.cloud/v1/juz/${juzNumber}/bn.bengali`);
+      const bnData = await bnRes.json();
+
+      const ayahs: Ayah[] = arData.data.ayahs.map((ayah: any, index: number) => ({
+        number: ayah.number,
+        text: ayah.text,
+        bnText: bnData.data.ayahs[index].text,
+        audio: ayah.audio
+      }));
+
+      setJuzData({ number: juzNumber, ayahs });
+    } catch (err) {
+      console.error("Failed to fetch Quran data:", err);
+      setError("Failed to load Quran. Please check your connection.");
+    } finally {
+      setIsJuzLoading(false);
+    }
+  };
+
+  const toggleJuzAudio = (juzNumber: number) => {
+    if (playingJuzAudio === juzNumber) {
+      if (quranAudioRef.current) {
+        quranAudioRef.current.pause();
+      }
+      setPlayingJuzAudio(null);
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        setPlayingAdhan(null);
+      }
+      
+      if (juzData && juzData.number === juzNumber) {
+        playAyah(0);
+      } else {
+        setIsJuzLoading(true);
+        setActiveJuz(juzNumber);
+        
+        // Fetch and then play
+        Promise.all([
+          fetch(`https://api.alquran.cloud/v1/juz/${juzNumber}/ar.alafasy`).then(r => r.json()),
+          fetch(`https://api.alquran.cloud/v1/juz/${juzNumber}/bn.bengali`).then(r => r.json())
+        ]).then(([arData, bnData]) => {
+          const ayahs: Ayah[] = arData.data.ayahs.map((ayah: any, index: number) => ({
+            number: ayah.number,
+            text: ayah.text,
+            bnText: bnData.data.ayahs[index].text,
+            audio: ayah.audio
+          }));
+          const newJuzData = { number: juzNumber, ayahs };
+          setJuzData(newJuzData);
+          setIsJuzLoading(false);
+          
+          // Start playing immediately with the new data
+          const playFirstAyah = (data: JuzData, index: number) => {
+            if (index >= data.ayahs.length) {
+              setPlayingJuzAudio(null);
+              return;
+            }
+            if (quranAudioRef.current) quranAudioRef.current.pause();
+            const audio = new Audio(data.ayahs[index].audio);
+            audio.play().catch(err => console.error("Audio play error:", err));
+            quranAudioRef.current = audio;
+            setPlayingJuzAudio(data.number);
+            setCurrentAyahIndex(index);
+            audio.onended = () => playFirstAyah(data, index + 1);
+          };
+          playFirstAyah(newJuzData, 0);
+        }).catch(err => {
+          console.error("Failed to fetch Quran data:", err);
+          setError("Failed to load Quran. Please check your connection.");
+          setIsJuzLoading(false);
+        });
+      }
+    }
+  };
+
+  const playAyah = (index: number) => {
+    if (!juzData || index >= juzData.ayahs.length) {
+      setPlayingJuzAudio(null);
+      return;
+    }
+
+    if (quranAudioRef.current) {
+      quranAudioRef.current.pause();
+    }
+
+    const audio = new Audio(juzData.ayahs[index].audio);
+    audio.play().catch(err => console.error("Audio play error:", err));
+    quranAudioRef.current = audio;
+    setPlayingJuzAudio(juzData.number);
+    setCurrentAyahIndex(index);
+
+    audio.onended = () => {
+      playAyah(index + 1);
+    };
   };
 
   const filteredDistricts = BANGLADESH_DISTRICTS.filter(d => 
@@ -635,6 +768,30 @@ export default function App() {
                   <span className="text-[8px] text-gold-500 font-bold">i</span>
                 </div>
               </div>
+              
+              {/* Tarawih Highlight */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                className="glass p-5 rounded-3xl border-gold-500/30 bg-gold-500/10 relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 p-2 opacity-10">
+                  <Moon className="w-12 h-12 text-gold-500" />
+                </div>
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2 h-2 rounded-full bg-gold-500 animate-pulse" />
+                    <p className="text-[10px] text-gold-500 font-bold uppercase tracking-widest">{t.tarawih}</p>
+                  </div>
+                  <h3 className="text-xl font-bold mb-1">{t.tarawih_rakat}</h3>
+                  <p className="text-xs text-gold-500/70 leading-relaxed">
+                    {language === "bn" 
+                      ? "তারাবিহ নামাজ রমজান মাসের একটি বিশেষ সুন্নত নামাজ। এটি এশার নামাজের পর এবং বিতর নামাজের আগে পড়তে হয়।" 
+                      : "Tarawih is a special Sunnah prayer performed during Ramadan after Isha and before Witr."}
+                  </p>
+                </div>
+              </motion.div>
+
               <div className="space-y-3">
                 {[
                   { name: "fajr", rakat: t.fajr_rakat },
@@ -651,12 +808,13 @@ export default function App() {
                     className="glass p-4 rounded-2xl flex items-center gap-4 border-gold-500/5"
                   >
                     <div className="w-10 h-10 rounded-xl bg-gold-500/10 flex items-center justify-center flex-shrink-0 border border-gold-500/20">
-                      <span className="text-gold-500 font-bold text-xs">
+                      <span className="text-gold-500 font-bold text-xs uppercase">
                         {prayer.name === "fajr" && "F"}
                         {prayer.name === "dhuhr" && "D"}
                         {prayer.name === "asr" && "A"}
                         {prayer.name === "maghrib" && "M"}
                         {prayer.name === "isha" && "I"}
+                        {prayer.name === "tarawih" && "T"}
                       </span>
                     </div>
                     <div className="flex-1">
@@ -673,6 +831,106 @@ export default function App() {
               </div>
             </section>
           </>
+        )}
+
+        {activeTab === "quran" && (
+          <section className="space-y-6">
+            <div className="flex items-center justify-between px-2">
+              <h2 className="text-2xl font-bold text-gold-500">{t.quran_title}</h2>
+              <BookOpen className="w-6 h-6 text-gold-500/50" />
+            </div>
+
+            {activeJuz === null ? (
+              <div className="space-y-4">
+                <div className="px-2">
+                  <p className="text-xs text-gold-500/70 uppercase tracking-widest font-bold">{t.juz_list}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {Array.from({ length: 30 }, (_, i) => i + 1).map((num) => (
+                    <motion.div
+                      key={num}
+                      whileHover={{ y: -2 }}
+                      className="glass p-4 rounded-2xl flex flex-col gap-3 border-gold-500/5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="w-8 h-8 rounded-lg bg-gold-500/10 flex items-center justify-center border border-gold-500/20">
+                          <span className="text-gold-500 font-bold text-xs">{num}</span>
+                        </div>
+                        <button 
+                          onClick={() => toggleJuzAudio(num)}
+                          className={`p-2 rounded-full transition-all ${playingJuzAudio === num ? 'bg-gold-500 text-emerald-950 shadow-lg shadow-gold-500/20' : 'bg-white/5 text-gold-500'}`}
+                        >
+                          {playingJuzAudio === num ? <PauseCircle className="w-4 h-4" /> : <PlayCircle className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      <button 
+                        onClick={() => fetchJuzData(num)}
+                        className="text-left group"
+                      >
+                        <p className="text-xs font-bold uppercase tracking-widest text-gold-500/70 group-hover:text-gold-500 transition-colors">{t.juz} {num}</p>
+                        <p className="text-sm font-medium">{t.read_quran}</p>
+                      </button>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="flex items-center gap-4 px-2">
+                  <button 
+                    onClick={() => { setActiveJuz(null); setJuzData(null); }}
+                    className="p-2 rounded-full bg-white/5 text-gold-500"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <div>
+                    <h3 className="text-lg font-bold">{t.juz} {activeJuz}</h3>
+                    <p className="text-[10px] text-gold-500 uppercase tracking-widest font-bold">{t.quran_title}</p>
+                  </div>
+                  <button 
+                    onClick={() => toggleJuzAudio(activeJuz!)}
+                    className={`ml-auto p-3 rounded-full transition-all ${playingJuzAudio === activeJuz ? 'bg-gold-500 text-emerald-950' : 'bg-white/5 text-gold-500'}`}
+                  >
+                    {playingJuzAudio === activeJuz ? <PauseCircle className="w-5 h-5" /> : <PlayCircle className="w-5 h-5" />}
+                  </button>
+                </div>
+
+                {isJuzLoading ? (
+                  <div className="flex flex-col items-center justify-center py-20">
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="mb-4">
+                      <RotateCcw className="w-8 h-8 text-gold-500/50" />
+                    </motion.div>
+                    <p className="text-gold-500/50 text-sm">{t.loading_juz}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {juzData?.ayahs.map((ayah, idx) => (
+                      <motion.div 
+                        key={ayah.number}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`glass p-6 rounded-3xl space-y-4 border-gold-500/5 ${playingJuzAudio === activeJuz && currentAyahIndex === idx ? 'ring-1 ring-gold-500/30 bg-gold-500/5' : ''}`}
+                      >
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="w-6 h-6 rounded-full bg-gold-500/10 flex items-center justify-center flex-shrink-0 border border-gold-500/20">
+                            <span className="text-[10px] text-gold-500 font-bold">{idx + 1}</span>
+                          </div>
+                          <p className="text-2xl font-arabic text-right leading-loose flex-1" dir="rtl">
+                            {ayah.text}
+                          </p>
+                        </div>
+                        <div className="pt-4 border-t border-white/5">
+                          <p className="text-sm text-gold-500/80 leading-relaxed">
+                            {ayah.bnText}
+                          </p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
         )}
 
         {activeTab === "calendar" && (
@@ -874,6 +1132,10 @@ export default function App() {
         <button onClick={() => setActiveTab("tasbih")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "tasbih" ? "text-gold-500 scale-110" : "opacity-40"}`}>
           <Fingerprint className="w-6 h-6" />
           <span className="text-[10px] font-bold uppercase tracking-tighter">Tasbih</span>
+        </button>
+        <button onClick={() => setActiveTab("quran")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "quran" ? "text-gold-500 scale-110" : "opacity-40"}`}>
+          <BookOpen className="w-6 h-6" />
+          <span className="text-[10px] font-bold uppercase tracking-tighter">Quran</span>
         </button>
         <button onClick={() => setActiveTab("zakat")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "zakat" ? "text-gold-500 scale-110" : "opacity-40"}`}>
           <Wallet className="w-6 h-6" />

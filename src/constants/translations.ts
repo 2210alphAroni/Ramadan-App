@@ -62,9 +62,18 @@ export const translations = {
     asr_rakat: "4 Sunnat + 4 Farz",
     maghrib_rakat: "3 Farz + 2 Sunnat + 2 Nafl",
     isha_rakat: "4 Sunnat + 4 Farz + 2 Sunnat + 2 Nafl + 3 Witr + 2 Nafl",
+    tarawih_rakat: "20 Rakat (Sunnat-e-Muakkadah)",
     prayer_note: "Note: Sunnat Ghair Muakkadah is optional but recommended. Nafl is voluntary.",
     listen_adhan: "Listen Adhan",
-    stop_adhan: "Stop Adhan"
+    stop_adhan: "Stop Adhan",
+    quran_title: "Holy Quran",
+    juz: "Juz",
+    juz_list: "List of 30 Juz",
+    read_quran: "Read Quran",
+    play_audio: "Play Audio",
+    stop_audio: "Stop Audio",
+    loading_juz: "Loading Juz data...",
+    tarawih: "Tarawih"
   },
   bn: {
     app_title: "রমজান",
@@ -129,9 +138,18 @@ export const translations = {
     asr_rakat: "৪ সুন্নত + ৪ ফরজ",
     maghrib_rakat: "৩ ফরজ + ২ সুন্নত + ২ নফল",
     isha_rakat: "৪ সুন্নত + ৪ ফরজ + ২ সুন্নত + ২ নফল + ৩ বিতর + ২ নফল",
+    tarawih_rakat: "২০ রাকাত (সুন্নতে মুয়াক্কাদা)",
     prayer_note: "দ্রষ্টব্য: সুন্নত গায়রে মুয়াক্কাদা ঐচ্ছিক কিন্তু সওয়াবের কাজ। নফল নামাজ নফল ইবাদত হিসেবে গণ্য।",
     listen_adhan: "আযান শুনুন",
-    stop_adhan: "আযান বন্ধ করুন"
+    stop_adhan: "আযান বন্ধ করুন",
+    quran_title: "পবিত্র কুরআন",
+    juz: "পারা",
+    juz_list: "৩০ পারার তালিকা",
+    read_quran: "কুরআন পড়ুন",
+    play_audio: "অডিও শুনুন",
+    stop_audio: "অডিও বন্ধ করুন",
+    loading_juz: "পারা লোড হচ্ছে...",
+    tarawih: "তারাবিহ"
   }
 };
 
