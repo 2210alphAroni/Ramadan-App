@@ -123,6 +123,16 @@ export default function App() {
   const quranAudioRef = useRef<HTMLAudioElement | null>(null);
   const t = translations[language];
 
+  // Auto-scroll to active Ayah
+  useEffect(() => {
+    if (playingJuzAudio !== null && activeTab === "quran" && activeJuz !== null) {
+      const element = document.getElementById(`ayah-${currentAyahIndex}`);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  }, [currentAyahIndex, playingJuzAudio, activeTab, activeJuz]);
+
   const calculateZakat = () => {
     const total = 
       (parseFloat(zakatInputs.cash) || 0) + 
@@ -854,7 +864,7 @@ export default function App() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="w-8 h-8 rounded-lg bg-gold-500/10 flex items-center justify-center border border-gold-500/20">
-                          <span className="text-gold-500 font-bold text-xs">{num}</span>
+                          <span className="text-gold-500 font-bold text-xs">{toBengaliNumber(num, language)}</span>
                         </div>
                         <button 
                           onClick={() => toggleJuzAudio(num)}
@@ -867,7 +877,7 @@ export default function App() {
                         onClick={() => fetchJuzData(num)}
                         className="text-left group"
                       >
-                        <p className="text-xs font-bold uppercase tracking-widest text-gold-500/70 group-hover:text-gold-500 transition-colors">{t.juz} {num}</p>
+                        <p className="text-xs font-bold uppercase tracking-widest text-gold-500/70 group-hover:text-gold-500 transition-colors">{t.juz} {toBengaliNumber(num, language)}</p>
                         <p className="text-sm font-medium">{t.read_quran}</p>
                       </button>
                     </motion.div>
@@ -884,7 +894,7 @@ export default function App() {
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                   <div>
-                    <h3 className="text-lg font-bold">{t.juz} {activeJuz}</h3>
+                    <h3 className="text-lg font-bold">{t.juz} {toBengaliNumber(activeJuz, language)}</h3>
                     <p className="text-[10px] text-gold-500 uppercase tracking-widest font-bold">{t.quran_title}</p>
                   </div>
                   <button 
@@ -907,23 +917,34 @@ export default function App() {
                     {juzData?.ayahs.map((ayah, idx) => (
                       <motion.div 
                         key={ayah.number}
+                        id={`ayah-${idx}`}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`glass p-6 rounded-3xl space-y-4 border-gold-500/5 ${playingJuzAudio === activeJuz && currentAyahIndex === idx ? 'ring-1 ring-gold-500/30 bg-gold-500/5' : ''}`}
+                        className={`glass p-6 rounded-3xl space-y-4 border-gold-500/5 transition-all duration-500 ${playingJuzAudio === activeJuz && currentAyahIndex === idx ? 'ring-2 ring-gold-500 bg-gold-500/10 shadow-lg shadow-gold-500/5' : ''}`}
                       >
                         <div className="flex justify-between items-start gap-4">
-                          <div className="w-6 h-6 rounded-full bg-gold-500/10 flex items-center justify-center flex-shrink-0 border border-gold-500/20">
-                            <span className="text-[10px] text-gold-500 font-bold">{idx + 1}</span>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 border transition-colors ${playingJuzAudio === activeJuz && currentAyahIndex === idx ? 'bg-gold-500 text-emerald-950 border-gold-500' : 'bg-gold-500/10 text-gold-500 border-gold-500/20'}`}>
+                            <span className="text-xs font-bold">{toBengaliNumber(idx + 1, language)}</span>
                           </div>
-                          <p className="text-2xl font-arabic text-right leading-loose flex-1" dir="rtl">
+                          <p className={`text-2xl font-arabic text-right leading-loose flex-1 transition-colors ${playingJuzAudio === activeJuz && currentAyahIndex === idx ? 'text-white' : 'text-white/90'}`} dir="rtl">
                             {ayah.text}
                           </p>
                         </div>
-                        <div className="pt-4 border-t border-white/5">
-                          <p className="text-sm text-gold-500/80 leading-relaxed">
+                        <div className={`pt-4 border-t transition-colors ${playingJuzAudio === activeJuz && currentAyahIndex === idx ? 'border-gold-500/20' : 'border-white/5'}`}>
+                          <p className={`text-sm leading-relaxed transition-colors ${playingJuzAudio === activeJuz && currentAyahIndex === idx ? 'text-gold-500 font-medium' : 'text-gold-500/80'}`}>
                             {ayah.bnText}
                           </p>
                         </div>
+                        {playingJuzAudio === activeJuz && currentAyahIndex === idx && (
+                          <div className="flex justify-center pt-2">
+                            <div className="flex gap-1 items-end h-4">
+                              <motion.div animate={{ height: [4, 12, 4] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-1 bg-gold-500 rounded-full" />
+                              <motion.div animate={{ height: [8, 16, 8] }} transition={{ repeat: Infinity, duration: 0.5, delay: 0.1 }} className="w-1 bg-gold-500 rounded-full" />
+                              <motion.div animate={{ height: [6, 14, 6] }} transition={{ repeat: Infinity, duration: 0.7, delay: 0.2 }} className="w-1 bg-gold-500 rounded-full" />
+                              <motion.div animate={{ height: [10, 4, 10] }} transition={{ repeat: Infinity, duration: 0.5, delay: 0.3 }} className="w-1 bg-gold-500 rounded-full" />
+                            </div>
+                          </div>
+                        )}
                       </motion.div>
                     ))}
                   </div>
