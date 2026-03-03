@@ -23,7 +23,8 @@ import {
   PlayCircle,
   PauseCircle,
   Music,
-  ChevronLeft
+  ChevronLeft,
+  Home
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { PrayerData, PrayerName, NextPrayer } from "./types";
@@ -32,7 +33,7 @@ import { translations, Language } from "./constants/translations";
 
 const PRAYER_ORDER: PrayerName[] = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
-type Tab = "prayer" | "calendar" | "qibla" | "tasbih" | "zakat" | "quran";
+type Tab = "home" | "calendar" | "qibla" | "tasbih" | "zakat" | "quran";
 
 interface Ayah {
   number: number;
@@ -81,7 +82,7 @@ const getBengaliDay = (date: Date): string => {
 };
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<Tab>("prayer");
+  const [activeTab, setActiveTab] = useState<Tab>("home");
   const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<District | null>(null);
   const [prayerData, setPrayerData] = useState<PrayerData | null>(null);
@@ -115,6 +116,9 @@ export default function App() {
   const [isJuzLoading, setIsJuzLoading] = useState(false);
   const [playingJuzAudio, setPlayingJuzAudio] = useState<number | null>(null);
   const [currentAyahIndex, setCurrentAyahIndex] = useState(0);
+  const [expandedPrayer, setExpandedPrayer] = useState<string | null>(null);
+  const [isSalahModalOpen, setIsSalahModalOpen] = useState(false);
+  const [selectedSalah, setSelectedSalah] = useState<string | null>(null);
 
   const quranAudioRef = useRef<HTMLAudioElement | null>(null);
   const notificationAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -604,7 +608,7 @@ export default function App() {
 
       {/* Main Content */}
       <main className="flex-1 px-6 space-y-6 pt-4">
-        {activeTab === "prayer" && (
+        {activeTab === "home" && (
           <>
             {/* Date & Location Card */}
             <section className="glass rounded-3xl p-6 relative overflow-hidden group">
@@ -637,21 +641,46 @@ export default function App() {
             </section>
 
             {/* Live Ramadan Status (Iftar & Sehri) */}
-            <section className="grid grid-cols-2 gap-4">
-              <div className="glass p-4 rounded-2xl border-gold-500/20 bg-gold-500/5">
-                <div className="flex items-center gap-2 mb-2">
-                  <Moon className="w-4 h-4 text-gold-500" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-gold-500">{t.sehri}</span>
+            <section className="space-y-4">
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                className="glass p-6 rounded-3xl border-gold-500/20 bg-gold-500/5 flex items-center justify-between relative overflow-hidden group"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gold-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-gold-500/10 transition-all" />
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gold-500/10 flex items-center justify-center border border-gold-500/20">
+                    <Moon className="w-6 h-6 text-gold-500" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-gold-500 block mb-1">{t.sehri}</span>
+                    <p className="text-3xl font-bold tracking-tight">{formatTime(prayerData?.timings.Fajr || "", language)}</p>
+                  </div>
                 </div>
-                <p className="text-2xl font-bold">{formatTime(prayerData?.timings.Fajr || "", language)}</p>
-              </div>
-              <div className="glass p-4 rounded-2xl border-gold-500/20 bg-gold-500/5">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sun className="w-4 h-4 text-gold-500" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-gold-500">{t.iftar}</span>
+                <div className="text-right">
+                  <p className="text-[10px] opacity-40 uppercase tracking-widest font-bold">{t.ends_at}</p>
+                  <p className="text-sm font-bold text-gold-500/80">{formatTime(prayerData?.timings.Fajr || "", language)}</p>
                 </div>
-                <p className="text-2xl font-bold">{formatTime(prayerData?.timings.Maghrib || "", language)}</p>
-              </div>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                className="glass p-6 rounded-3xl border-gold-500/20 bg-gold-500/5 flex items-center justify-between relative overflow-hidden group"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gold-500/5 rounded-full -mr-12 -mt-12 blur-2xl group-hover:bg-gold-500/10 transition-all" />
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gold-500/10 flex items-center justify-center border border-gold-500/20">
+                    <Sun className="w-6 h-6 text-gold-500" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-gold-500 block mb-1">{t.iftar}</span>
+                    <p className="text-3xl font-bold tracking-tight">{formatTime(prayerData?.timings.Maghrib || "", language)}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] opacity-40 uppercase tracking-widest font-bold">{t.starts_at}</p>
+                  <p className="text-sm font-bold text-gold-500/80">{formatTime(prayerData?.timings.Maghrib || "", language)}</p>
+                </div>
+              </motion.div>
             </section>
 
             {/* Next Event Countdown */}
@@ -695,7 +724,17 @@ export default function App() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {PRAYER_ORDER.map((name) => (
-                  <motion.div key={name} whileHover={{ y: -2 }} className={`glass p-4 rounded-2xl flex items-center justify-between transition-all ${nextPrayer?.name === (t[name.toLowerCase() as keyof typeof t] || name) ? 'border-gold-500/50 bg-gold-500/5 ring-1 ring-gold-500/20' : ''}`}>
+                  <motion.div 
+                    key={name}
+                    whileHover={{ y: -2 }} 
+                    onClick={() => {
+                      if (name !== "Sunrise") {
+                        setSelectedSalah(name);
+                        setIsSalahModalOpen(true);
+                      }
+                    }}
+                    className={`glass p-4 rounded-2xl flex items-center justify-between transition-all cursor-pointer ${nextPrayer?.name === (t[name.toLowerCase() as keyof typeof t] || name) ? 'border-gold-500/50 bg-gold-500/5 ring-1 ring-gold-500/20' : ''}`}
+                  >
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${nextPrayer?.name === (t[name.toLowerCase() as keyof typeof t] || name) ? 'bg-gold-500 text-emerald-950' : 'bg-white/5 opacity-50'}`}>
                         {name === "Fajr" && <Moon className="w-5 h-5" />}
@@ -710,6 +749,7 @@ export default function App() {
                         <p className="text-lg font-bold">{formatTime(prayerData?.timings[name] || "", language)}</p>
                       </div>
                     </div>
+                    {name !== "Sunrise" && <ChevronRight className="w-4 h-4 text-gold-500/30" />}
                   </motion.div>
                 ))}
               </div>
@@ -963,8 +1003,8 @@ export default function App() {
         {activeTab === "qibla" && (
           <section className="flex flex-col items-center justify-center py-10 space-y-8">
             <div className="text-center">
-              <h2 className="text-3xl font-bold text-gold-500 mb-2">Qibla Compass</h2>
-              <p className="text-sm opacity-60">Align your device to find the Kaaba</p>
+              <h2 className="text-3xl font-bold text-gold-500 mb-2">{t.qibla}</h2>
+              <p className="text-sm opacity-60">{t.qibla_helper}</p>
             </div>
             
             <div className="relative w-64 h-64">
@@ -992,8 +1032,8 @@ export default function App() {
             </div>
 
             <div className="glass p-6 rounded-2xl text-center w-full">
-              <p className="text-gold-500 text-xs font-bold uppercase tracking-widest mb-1">Angle to Kaaba</p>
-              <p className="text-3xl font-bold">{Math.round(qiblaAngle)}°</p>
+              <p className="text-gold-500 text-xs font-bold uppercase tracking-widest mb-1">{t.qibla_angle}</p>
+              <p className="text-3xl font-bold">{toBengaliNumber(Math.round(qiblaAngle), language)}°</p>
             </div>
           </section>
         )}
@@ -1081,11 +1121,92 @@ export default function App() {
         )}
       </main>
 
-      {/* Navigation Bar */}
+      {/* Salah Details Modal */}
+      <AnimatePresence>
+        {isSalahModalOpen && selectedSalah && (
+          <div className="fixed inset-0 z-[100] flex items-end justify-center px-4 pb-4 sm:items-center sm:p-0">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setIsSalahModalOpen(false)}
+              className="fixed inset-0 bg-emerald-950/80 backdrop-blur-sm" 
+            />
+            <motion.div 
+              initial={{ y: "100%" }} 
+              animate={{ y: 0 }} 
+              exit={{ y: "100%" }}
+              className="relative glass w-full max-w-sm rounded-3xl overflow-hidden border border-gold-500/20 shadow-2xl"
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gold-500/10 flex items-center justify-center border border-gold-500/20">
+                      {selectedSalah === "Fajr" && <Moon className="w-6 h-6 text-gold-500" />}
+                      {selectedSalah === "Dhuhr" && <Sun className="w-6 h-6 text-gold-500" />}
+                      {selectedSalah === "Asr" && <Sun className="w-6 h-6 text-gold-500" />}
+                      {selectedSalah === "Maghrib" && <Moon className="w-6 h-6 text-gold-500" />}
+                      {selectedSalah === "Isha" && <Moon className="w-6 h-6 text-gold-500" />}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold">{t[selectedSalah.toLowerCase() as keyof typeof t] || selectedSalah}</h3>
+                      <p className="text-[10px] text-gold-500 font-bold uppercase tracking-widest">{t.prayer_times}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setIsSalahModalOpen(false)} className="p-2 rounded-full glass hover:bg-gold-500/10 transition-all">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-gold-500 mb-2">{t.niyyat_title}</h4>
+                    <div className="glass p-4 rounded-2xl border-gold-500/10 bg-gold-500/5">
+                      <p className="text-sm leading-relaxed italic opacity-90">
+                        {t[`${selectedSalah.toLowerCase()}_niyyat` as keyof typeof t]}
+                      </p>
+                    </div>
+                    <p className="text-[10px] mt-2 opacity-50 italic">{t.niyyat_desc}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="glass p-4 rounded-2xl border-gold-500/10">
+                      <p className="text-[10px] uppercase tracking-widest opacity-40 font-bold mb-1">{t.rakat}</p>
+                      <p className="text-sm font-bold">{t[`${selectedSalah.toLowerCase()}_rakat` as keyof typeof t]}</p>
+                    </div>
+                    <div className="glass p-4 rounded-2xl border-gold-500/10">
+                      <p className="text-[10px] uppercase tracking-widest opacity-40 font-bold mb-1">{t.at}</p>
+                      <p className="text-sm font-bold">{formatTime(prayerData?.timings[selectedSalah as keyof typeof prayerData.timings] || "", language)}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-gold-500 mb-2">{t.salah_steps}</h4>
+                    <div className="space-y-2">
+                      {[1, 2, 3, 4, 5].map(i => (
+                        <div key={i} className="glass p-3 rounded-xl border-white/5 bg-white/5">
+                          <p className="text-xs opacity-80">{t[`step_${i}` as keyof typeof t]}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setIsSalahModalOpen(false)}
+                  className="w-full mt-8 py-4 glass bg-gold-500 text-emerald-950 font-bold rounded-2xl hover:scale-[1.02] transition-all active:scale-95"
+                >
+                  {language === "bn" ? "বন্ধ করুন" : "Close"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass backdrop-blur-2xl border-t border-white/5 px-4 py-4 flex items-center justify-around z-50 rounded-t-3xl">
-        <button onClick={() => setActiveTab("prayer")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "prayer" ? "text-gold-500 scale-110" : "opacity-40"}`}>
-          <Clock className="w-6 h-6" />
-          <span className="text-[10px] font-bold uppercase tracking-tighter">{t.sehri}</span>
+        <button onClick={() => setActiveTab("home")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "home" ? "text-gold-500 scale-110" : "opacity-40"}`}>
+          <Home className="w-6 h-6" />
+          <span className="text-[10px] font-bold uppercase tracking-tighter">{t.home}</span>
         </button>
         <button onClick={() => setActiveTab("calendar")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "calendar" ? "text-gold-500 scale-110" : "opacity-40"}`}>
           <CalendarDays className="w-6 h-6" />
@@ -1093,19 +1214,19 @@ export default function App() {
         </button>
         <button onClick={() => setActiveTab("qibla")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "qibla" ? "text-gold-500 scale-110" : "opacity-40"}`}>
           <Compass className="w-6 h-6" />
-          <span className="text-[10px] font-bold uppercase tracking-tighter">Qibla</span>
+          <span className="text-[10px] font-bold uppercase tracking-tighter">{t.qibla}</span>
         </button>
         <button onClick={() => setActiveTab("tasbih")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "tasbih" ? "text-gold-500 scale-110" : "opacity-40"}`}>
           <Fingerprint className="w-6 h-6" />
-          <span className="text-[10px] font-bold uppercase tracking-tighter">Tasbih</span>
+          <span className="text-[10px] font-bold uppercase tracking-tighter">{t.tasbih}</span>
         </button>
         <button onClick={() => setActiveTab("quran")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "quran" ? "text-gold-500 scale-110" : "opacity-40"}`}>
           <BookOpen className="w-6 h-6" />
-          <span className="text-[10px] font-bold uppercase tracking-tighter">Quran</span>
+          <span className="text-[10px] font-bold uppercase tracking-tighter">{t.quran}</span>
         </button>
         <button onClick={() => setActiveTab("zakat")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "zakat" ? "text-gold-500 scale-110" : "opacity-40"}`}>
           <Wallet className="w-6 h-6" />
-          <span className="text-[10px] font-bold uppercase tracking-tighter">Zakat</span>
+          <span className="text-[10px] font-bold uppercase tracking-tighter">{t.zakat}</span>
         </button>
       </nav>
 
@@ -1163,22 +1284,13 @@ export default function App() {
                     <button onClick={() => setTheme("light")} className={`py-3 rounded-xl border transition-all cursor-pointer relative z-10 flex items-center justify-center gap-2 ${theme === "light" ? 'bg-gold-500/20 border-gold-500/50 text-gold-500' : 'bg-white/5 border-white/10'}`}><Sun className="w-4 h-4" />{t.light}</button>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-gold-500">{t.notifications}</p>
-                  <div className="flex flex-col gap-2">
-                    <button onClick={toggleNotifications} className={`w-full py-4 rounded-xl border flex items-center justify-between px-4 transition-all cursor-pointer relative z-10 ${notificationsEnabled ? 'bg-gold-500/20 border-gold-500/50 text-gold-500' : 'bg-white/5 border-white/10'}`}>
-                      <span className="font-medium">{t.notifications}</span>
-                      {notificationsEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
               </div>
               <div className="mt-auto">
                 <div className="glass p-4 rounded-2xl border-gold-500/20">
-                  <p className="text-[10px] text-gold-500 font-bold uppercase tracking-widest mb-1">Ramadan 2026</p>
+                  <p className="text-[10px] text-gold-500 font-bold uppercase tracking-widest mb-1">{t.ramadan_year}</p>
                   <p className="text-xs opacity-60 mb-3">{t.ramadan_blessing}</p>
                   <p className="text-[10px] text-center font-semibold uppercase tracking-wider">
-                    Developed by{" "}
+                    {t.developed_by}{" "}
                     <a
                       href="https://roniportfolio.onrender.com"
                       target="_blank"
