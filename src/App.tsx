@@ -96,7 +96,7 @@ export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDistrictModalOpen, setIsDistrictModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [language, setLanguage] = useState<Language>("en");
+  const [language, setLanguage] = useState<Language>("bn");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [qiblaAngle, setQiblaAngle] = useState(0);
   const [deviceHeading, setDeviceHeading] = useState(0);
